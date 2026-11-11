@@ -1,0 +1,95 @@
+:root {
+  /* Sky and panels */
+  --sky-top: #d9cdff;
+  --sky-bottom: #f1eaff;
+  --panel: #fcfaff;
+  --tint: #e9e0ff;
+  --grid-line: #ddd2f7;
+
+  /* Ink: borders and text */
+  --ink: #4a3b8f;
+  --ink-soft: rgba(74, 59, 143, 0.28);
+  --text: #2b2757;
+  --muted: #6c659b;
+  --purple: #7658b5;
+
+  /* Tile colours, taken from the mockup */
+  --blue: #41c4f7;
+  --blue-edge: #1a7fb3;
+  --orange: #f6a41c;
+  --orange-edge: #b06a00;
+  --green: #a6ea1e;
+  --green-edge: #5c9400;
+
+  --play: #b9f26d;
+
+  color-scheme: light;
+}
+
+* {
+  box-sizing: border-box;
+  padding: 0;
+  margin: 0;
+}
+
+html {
+  height: 100%;
+  -webkit-text-size-adjust: 100%;
+}
+
+html {
+  max-width: 100vw;
+  overflow-x: hidden;
+}
+
+/* "clip" (not "hidden") so the sticky bar at the bottom keeps working on phones */
+body {
+  max-width: 100vw;
+  overflow-x: clip;
+}
+
+body {
+  min-height: 100dvh;
+  color: var(--text);
+  background-color: var(--sky-bottom);
+  /*
+    A bright lavender sky:
+    1-3. pixel clouds   4. sparkles   5. soft sunlight from the top   6. sky gradient
+  */
+  background-image:
+    url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 10' shape-rendering='crispEdges' fill='%23ffffff' fill-opacity='.85'%3E%3Crect x='10' y='0' width='8' height='2'/%3E%3Crect x='6' y='2' width='18' height='2'/%3E%3Crect x='2' y='4' width='26' height='2'/%3E%3Crect x='0' y='6' width='32' height='4'/%3E%3C/svg%3E"),
+    url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 10' shape-rendering='crispEdges' fill='%23ffffff' fill-opacity='.7'%3E%3Crect x='12' y='0' width='10' height='2'/%3E%3Crect x='6' y='2' width='20' height='2'/%3E%3Crect x='2' y='4' width='28' height='2'/%3E%3Crect x='0' y='6' width='32' height='4'/%3E%3C/svg%3E"),
+    url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 10' shape-rendering='crispEdges' fill='%23ffffff' fill-opacity='.6'%3E%3Crect x='8' y='0' width='10' height='2'/%3E%3Crect x='4' y='2' width='20' height='2'/%3E%3Crect x='0' y='4' width='30' height='2'/%3E%3Crect x='0' y='6' width='32' height='4'/%3E%3C/svg%3E"),
+    url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 120 120' shape-rendering='crispEdges' fill='%23ffffff'%3E%3Cpath d='M20 14h2v4h4v2h-4v4h-2v-4h-4v-2h4zM88 70h2v3h3v2h-3v3h-2v-3h-3v-2h3z'/%3E%3Crect x='60' y='30' width='2' height='2'/%3E%3Crect x='30' y='96' width='2' height='2'/%3E%3C/svg%3E"),
+    radial-gradient(70rem 26rem at 50% -6rem, rgba(255, 255, 255, 0.9), transparent 70%),
+    linear-gradient(180deg, var(--sky-top), var(--sky-bottom) 70%);
+  background-repeat: no-repeat, no-repeat, no-repeat, repeat, no-repeat, no-repeat;
+  background-position: -40px 100%, 100% 100%, 50% 100%, 0 0, 0 0, 0 0;
+  background-size: 260px auto, 320px auto, 200px auto, 420px 420px, auto, auto;
+  font-family: var(--font-pixel), ui-monospace, "Courier New", monospace;
+  line-height: 1.35;
+  /* Stop the page from bouncing or zooming while tapping quickly */
+  overscroll-behavior: none;
+}
+
+button {
+  font: inherit;
+  color: inherit;
+  /* No tap delay or double-tap zoom on the game buttons */
+  touch-action: manipulation;
+  -webkit-tap-highlight-color: transparent;
+}
+
+:focus-visible {
+  outline: 3px solid var(--purple);
+  outline-offset: 2px;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation: none !important;
+    transition: none !important;
+  }
+}

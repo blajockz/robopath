@@ -1,0 +1,48 @@
+/* The ghost floats gently up and down */
+.ghost {
+  animation: float 1.6s ease-in-out infinite;
+}
+
+@keyframes float {
+  50% {
+    transform: translateY(-6%);
+  }
+}
+
+/* It blinks every few seconds */
+.eye {
+  transform-box: fill-box;
+  transform-origin: center;
+  animation: blink 3.8s infinite;
+}
+
+@keyframes blink {
+  0%,
+  93%,
+  100% {
+    transform: scaleY(1);
+  }
+  96% {
+    transform: scaleY(0.15);
+  }
+}
+
+/* Its feet wave: two drawings of the bottom edge take turns */
+.feetA {
+  animation: feet 0.7s steps(1) infinite;
+}
+
+.feetB {
+  opacity: 0;
+  animation: feet 0.7s steps(1) infinite reverse;
+}
+
+@keyframes feet {
+  0% {
+    opacity: 1;
+  }
+  50%,
+  100% {
+    opacity: 0;
+  }
+}

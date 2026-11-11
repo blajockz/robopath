@@ -1,0 +1,824 @@
+/*
+  Layout
+  ------
+  Phones in landscape are the main target: ghost on the left, board in the
+  centre, controls on the right, and the whole game fits the screen with no
+  scrolling. Desktop uses the same layout. Phones held upright get a stacked
+  layout (see the end of the file).
+
+  --u is the size of one control (slot or button). It follows the screen
+  height, so everything shrinks together on short screens.
+*/
+
+.page {
+  /* 1vh = 1% of the screen height. Browsers that know the newer "dvh"
+     unit (it follows the address bar on phones) use it instead, below. */
+  --vh: 1vh;
+  --u: clamp(24px, calc(var(--vh) * 9), 44px);
+  --gap: clamp(4px, calc(var(--vh) * 1.6), 12px);
+
+  width: 100%;
+  max-width: 1180px;
+  height: calc(var(--vh) * 100);
+  margin: 0 auto;
+  display: grid;
+  grid-template-rows: auto minmax(0, 1fr);
+  gap: var(--gap);
+  padding: var(--gap);
+  /* Keep clear of notches and the home indicator */
+  padding-left: max(var(--gap), env(safe-area-inset-left));
+  padding-right: max(var(--gap), env(safe-area-inset-right));
+  padding-bottom: max(var(--gap), env(safe-area-inset-bottom));
+  overflow: hidden;
+  font-size: clamp(13px, calc(var(--vh) * 4.4), 18px);
+  /* No text selection or long-press menu while tapping quickly */
+  -webkit-user-select: none;
+  user-select: none;
+  -webkit-touch-callout: none;
+}
+
+@supports (height: 100dvh) {
+  .page {
+    --vh: 1dvh;
+  }
+}
+
+/* ---------- Shared pieces ---------- */
+
+.card {
+  background: var(--panel);
+  border: 2px solid var(--ink);
+  border-radius: 10px;
+  box-shadow: 0 3px 0 var(--ink-soft);
+}
+
+.btn {
+  min-width: var(--u);
+  height: var(--u);
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0 6px;
+  background: #fff;
+  border: 2px solid var(--ink);
+  border-radius: 7px;
+  box-shadow: 0 2px 0 var(--ink);
+  color: var(--text);
+  font-weight: 700;
+  line-height: 1;
+  cursor: pointer;
+}
+
+.btn:active:not(:disabled) {
+  transform: translateY(2px);
+  box-shadow: none;
+}
+
+.btn:disabled {
+  opacity: 0.45;
+  cursor: not-allowed;
+}
+
+.btn svg,
+.slot svg {
+  font-size: calc(var(--u) * 0.56);
+}
+
+.go {
+  background: var(--play);
+}
+
+/* Colours, shared by tiles, slots, brushes and tinted command buttons */
+.blue {
+  background: var(--blue);
+  border-color: var(--blue-edge);
+}
+
+.orange {
+  background: var(--orange);
+  border-color: var(--orange-edge);
+}
+
+.green {
+  background: var(--green);
+  border-color: var(--green-edge);
+}
+
+.gold {
+  display: inline-flex;
+  color: var(--orange);
+  filter: drop-shadow(0 1px 0 var(--ink));
+}
+
+/* ---------- Top bar ---------- */
+
+.topbar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--gap);
+  padding: 3px 8px;
+  background: var(--tint);
+}
+
+.brand {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.brandGhost {
+  width: calc(var(--u) * 0.9);
+  height: calc(var(--u) * 0.9);
+}
+
+.brand h1 {
+  font-size: 1.35em;
+  font-weight: 700;
+  line-height: 1;
+}
+
+.levelNav {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+}
+
+.levelName {
+  min-width: 5.2em;
+  text-align: center;
+  font-weight: 700;
+  white-space: nowrap;
+  font-variant-numeric: tabular-nums;
+}
+
+.starCount {
+  height: var(--u);
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  padding: 0 8px;
+  background: #fff;
+  border: 2px solid var(--ink);
+  border-radius: 7px;
+  font-weight: 700;
+  white-space: nowrap;
+  font-variant-numeric: tabular-nums;
+}
+
+/* One small square per level: filled when solved, outlined when open */
+.pips {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+}
+
+.pip {
+  width: calc(var(--u) * 0.3);
+  height: calc(var(--u) * 0.3);
+  background: #fff;
+  border: 2px solid var(--ink);
+  border-radius: 3px;
+  opacity: 0.45;
+}
+
+.pipSolved {
+  background: var(--green);
+  opacity: 1;
+}
+
+.pipCurrent {
+  opacity: 1;
+  outline: 2px solid var(--purple);
+  outline-offset: 1px;
+}
+
+/* The club logo keeps its own background, shown as a small badge */
+.logo {
+  width: auto;
+  height: calc(var(--u) * 0.92);
+  border: 2px solid var(--ink);
+  border-radius: 7px;
+}
+
+.helpButton {
+  font-size: 1.2em;
+}
+
+.soundButton[aria-pressed="false"] {
+  color: var(--muted);
+}
+
+/* ---------- Main area: ghost | board | controls ---------- */
+
+.main {
+  min-height: 0;
+  display: grid;
+  grid-template-columns: clamp(118px, 21vw, 240px) minmax(0, 1fr) auto;
+  gap: var(--gap);
+}
+
+/* ---------- Left: ghost and speech bubble ---------- */
+
+.mascot {
+  min-width: 0;
+  min-height: 0;
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  justify-content: flex-end;
+  gap: 10px;
+}
+
+.bubble {
+  position: relative;
+  width: 100%;
+  min-height: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  padding: 6px 8px;
+  line-height: 1.25;
+}
+
+/* The tail of the bubble, pointing down at the ghost */
+.bubble::after {
+  content: "";
+  position: absolute;
+  left: 22px;
+  bottom: -8px;
+  width: 12px;
+  height: 12px;
+  background: var(--panel);
+  border-right: 2px solid var(--ink);
+  border-bottom: 2px solid var(--ink);
+  transform: rotate(45deg);
+}
+
+.bubble h2 {
+  font-size: 1.05em;
+  font-weight: 700;
+}
+
+.bubbleWon,
+.bubbleWon::after {
+  background: #f1ffd9;
+}
+
+.bubbleFail,
+.bubbleFail::after {
+  background: #fff0f3;
+}
+
+.bubble .btn {
+  align-self: stretch;
+  margin-top: 2px;
+  white-space: nowrap;
+}
+
+/* The animated ghost (GIF). Pixel art stays sharp at any size. */
+.mascotGif {
+  flex: none;
+  width: clamp(56px, calc(var(--vh) * 30), 160px);
+  height: clamp(56px, calc(var(--vh) * 30), 160px);
+  /* Slightly overlaps the bubble's tail, like it is speaking */
+  margin-top: -6px;
+}
+
+.mascotGif img,
+.victoryGif {
+  display: block;
+  width: 100%;
+  height: 100%;
+  image-rendering: -moz-crisp-edges;
+  image-rendering: pixelated;
+}
+
+/* ---------- Centre: board ---------- */
+
+.boardCard {
+  min-width: 0;
+  min-height: 0;
+  padding: var(--gap);
+  background: #fff;
+}
+
+/* The board is as large as this area allows, whatever the map's shape */
+.boardArea {
+  width: 100%;
+  height: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  container-type: size;
+}
+
+.board {
+  --cell: min(calc(100cqw / var(--cols)), calc(100cqh / var(--rows)), 76px);
+
+  position: relative;
+  display: grid;
+  grid-template-columns: repeat(var(--cols), var(--cell));
+  grid-template-rows: repeat(var(--rows), var(--cell));
+  /* A faint grid, so empty squares are easy to count */
+  background-image:
+    linear-gradient(var(--grid-line) 1px, transparent 1px),
+    linear-gradient(90deg, var(--grid-line) 1px, transparent 1px);
+  background-size: var(--cell) var(--cell);
+  box-shadow: inset -1px -1px 0 var(--grid-line);
+}
+
+.cell {
+  padding: 1.5px;
+}
+
+.tile {
+  width: 100%;
+  height: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border: 2px solid;
+  border-radius: 5px;
+  color: #fff;
+  font-size: calc(var(--cell) * 0.5);
+}
+
+/* Each tile has a darker edge of its own colour and a soft bevel */
+.tile.blue {
+  border-color: var(--blue-edge);
+}
+
+.tile.orange {
+  border-color: var(--orange-edge);
+}
+
+.tile.green {
+  border-color: var(--green-edge);
+}
+
+.tile {
+  box-shadow: inset 0 calc(var(--cell) * -0.07) 0 rgba(0, 0, 0, 0.12),
+    inset 0 calc(var(--cell) * 0.05) 0 rgba(255, 255, 255, 0.3);
+}
+
+.star {
+  display: flex;
+  filter: drop-shadow(0 1px 0 rgba(43, 39, 87, 0.5));
+  animation: twinkle 1.4s ease-in-out infinite;
+}
+
+@keyframes twinkle {
+  50% {
+    transform: scale(0.84);
+  }
+}
+
+.ghost {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: var(--cell);
+  height: var(--cell);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transform: translate(
+    calc(var(--x) * var(--cell)),
+    calc(var(--y) * var(--cell))
+  );
+  transition: transform 0.18s ease-out;
+  pointer-events: none;
+}
+
+.sprite {
+  width: 74%;
+  height: 74%;
+  filter: drop-shadow(0 2px 0 rgba(43, 39, 87, 0.35));
+}
+
+.ghostFell .sprite {
+  animation: shake 0.3s linear 2;
+}
+
+@keyframes shake {
+  25% {
+    transform: translateX(-3px);
+  }
+  75% {
+    transform: translateX(3px);
+  }
+}
+
+/* A small triangle on the side the ghost is facing */
+.facing {
+  position: absolute;
+  top: 0;
+  right: 0;
+  bottom: 0;
+  left: 0;
+}
+
+.facing::before {
+  content: "";
+  position: absolute;
+  top: 3%;
+  left: 50%;
+  margin-left: calc(var(--cell) * -0.14);
+  border-left: calc(var(--cell) * 0.14) solid transparent;
+  border-right: calc(var(--cell) * 0.14) solid transparent;
+  border-bottom: calc(var(--cell) * 0.17) solid var(--text);
+}
+
+/* ---------- Right: functions, commands, execution ---------- */
+
+.controls {
+  min-height: 0;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  gap: var(--gap);
+}
+
+.panel {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  padding: 5px 6px;
+}
+
+.functionRow {
+  display: flex;
+  align-items: flex-start;
+  gap: 6px;
+}
+
+.functionName {
+  flex: none;
+  width: 1.8em;
+  height: var(--u);
+  display: flex;
+  align-items: center;
+  font-weight: 700;
+}
+
+.slots {
+  display: grid;
+  grid-template-columns: repeat(var(--per-row), var(--u));
+  gap: 4px;
+}
+
+.slot {
+  width: var(--u);
+  height: var(--u);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0;
+  background: #f1eaff;
+  border: 2px solid var(--grid-line);
+  border-radius: 6px;
+  color: var(--text);
+  font-size: 0.85em;
+  font-weight: 700;
+  line-height: 1;
+  cursor: pointer;
+}
+
+.slot:disabled {
+  cursor: default;
+}
+
+/* A slot with a colour condition takes that colour */
+.slot.blue {
+  background: var(--blue);
+  border-color: var(--blue-edge);
+}
+
+.slot.orange {
+  background: var(--orange);
+  border-color: var(--orange-edge);
+}
+
+.slot.green {
+  background: var(--green);
+  border-color: var(--green-edge);
+}
+
+/* A filled slot without a colour condition is white */
+.filled:not(.blue):not(.orange):not(.green) {
+  background: #fff;
+  border-color: var(--ink);
+}
+
+/* The slot the next command will go into */
+.selected {
+  outline: 3px solid var(--purple);
+  outline-offset: -1px;
+}
+
+/* The command that is running right now */
+.active {
+  outline: 3px solid var(--text);
+  outline-offset: 1px;
+  transform: scale(1.08);
+}
+
+.row {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+}
+
+.spacer {
+  flex: 1;
+  min-width: 2px;
+}
+
+.brushes {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+}
+
+.brush {
+  width: var(--u);
+  height: var(--u);
+  padding: 0;
+  border: 2px solid var(--ink);
+  border-radius: 50%;
+  cursor: pointer;
+}
+
+/* "Any colour": a white brush with a diagonal line */
+.brush:not(.blue):not(.orange):not(.green) {
+  background: linear-gradient(
+    135deg,
+    #fff 44%,
+    var(--muted) 44% 56%,
+    #fff 56%
+  );
+}
+
+.brushOn {
+  outline: 3px solid var(--purple);
+  outline-offset: 1px;
+}
+
+.brush:disabled {
+  opacity: 0.45;
+  cursor: not-allowed;
+}
+
+.execution {
+  flex-direction: row;
+  background: var(--tint);
+}
+
+.playButton {
+  flex: 1;
+}
+
+/* ---------- How to play ---------- */
+
+.overlay {
+  position: fixed;
+  top: 0;
+  right: 0;
+  bottom: 0;
+  left: 0;
+  z-index: 20;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 10px;
+  background: rgba(43, 39, 87, 0.5);
+}
+
+.help {
+  width: 100%;
+  max-width: 460px;
+  max-height: 100%;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  padding: 10px 14px;
+}
+
+/* Language buttons and the close button stay visible; the text scrolls */
+.helpBar {
+  flex: none;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.languageOn {
+  background: var(--purple);
+  color: #fff;
+}
+
+.helpText {
+  min-height: 0;
+  overflow-y: auto;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  -webkit-user-select: text;
+  user-select: text;
+}
+
+/* The pixel font has no Arabic letters: use a clear system font instead */
+.helpText[lang="ar"],
+.btn[lang="ar"] {
+  font-family: "Noto Naskh Arabic", "Noto Sans Arabic", "Geeza Pro", "Segoe UI",
+    Tahoma, Arial, sans-serif;
+  line-height: 1.5;
+}
+
+.help h2 {
+  font-size: 1.3em;
+  font-weight: 700;
+}
+
+.help ol {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  /* "inline-start" is the left in English and the right in Arabic */
+  padding-inline-start: 1.4em;
+}
+
+.credit {
+  color: var(--muted);
+  font-size: 0.9em;
+}
+
+/* ---------- Victory window ---------- */
+
+.victory {
+  width: 100%;
+  max-width: 520px;
+  max-height: 100%;
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  padding: 12px 16px;
+  background: #f1ffd9;
+}
+
+.victoryGif {
+  flex: none;
+  width: clamp(96px, calc(var(--vh) * 42), 192px);
+  height: clamp(96px, calc(var(--vh) * 42), 192px);
+}
+
+.victoryText {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.victoryText h2 {
+  font-size: 1.6em;
+  font-weight: 700;
+  line-height: 1.1;
+}
+
+.victoryActions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin-top: 4px;
+}
+
+.victoryActions .btn {
+  padding: 0 14px;
+}
+
+/* ---------- Hover, only on devices that really hover ---------- */
+
+@media (hover: hover) {
+  .btn:hover:not(:disabled) {
+    filter: brightness(0.95);
+  }
+
+  .slot:hover:not(:disabled) {
+    border-color: var(--purple);
+  }
+}
+
+/* ---------- Narrow landscape phones: save space in the top bar ---------- */
+
+@media (orientation: landscape) and (max-width: 640px) {
+  .brand h1 {
+    display: none;
+  }
+}
+
+/* ---------- Phones held upright: stacked layout ---------- */
+
+@media (orientation: portrait) {
+  .page {
+    --u: clamp(28px, 9.4vw, 46px);
+    --gap: clamp(5px, 1.8vw, 12px);
+
+    /* Fits the screen when there is room; scrolls on very short screens */
+    height: auto;
+    min-height: calc(var(--vh) * 100);
+    overflow: visible;
+    font-size: clamp(14px, 4.2vw, 18px);
+  }
+
+  .topbar {
+    flex-wrap: wrap;
+    row-gap: 4px;
+  }
+
+  /* Row 1: name, progress and logo. Row 2: level, stars, help. */
+  .brand {
+    order: 1;
+    flex: 1 1 auto;
+  }
+
+  .pips {
+    order: 2;
+  }
+
+  .logo {
+    order: 3;
+  }
+
+  .levelNav {
+    order: 4;
+    flex: 1 1 50%;
+  }
+
+  .starCount {
+    order: 5;
+  }
+
+  .soundButton {
+    order: 6;
+  }
+
+  .helpButton {
+    order: 7;
+  }
+
+  .main {
+    grid-template-columns: minmax(0, 1fr);
+    grid-template-rows: auto minmax(150px, 1fr) auto;
+  }
+
+  .mascot {
+    flex-direction: row-reverse;
+    align-items: center;
+    justify-content: flex-end;
+  }
+
+  .mascotGif {
+    width: clamp(56px, 18vw, 88px);
+    height: clamp(56px, 18vw, 88px);
+    margin-top: 0;
+  }
+
+  .victory {
+    flex-direction: column;
+    text-align: center;
+  }
+
+  .victoryGif {
+    width: clamp(120px, 40vw, 192px);
+    height: clamp(120px, 40vw, 192px);
+  }
+
+  .victoryActions {
+    justify-content: center;
+  }
+
+  .bubble {
+    flex: 1;
+    width: auto;
+  }
+
+  /* The tail now points left, at the ghost */
+  .bubble::after {
+    left: -8px;
+    bottom: auto;
+    top: 50%;
+    margin-top: -6px;
+    border-right: none;
+    border-bottom: 2px solid var(--ink);
+    border-left: 2px solid var(--ink);
+  }
+
+  .controls {
+    align-items: stretch;
+  }
+
+  .slots {
+    grid-template-columns: repeat(auto-fill, var(--u));
+    flex: 1;
+  }
+}
